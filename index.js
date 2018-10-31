@@ -1,18 +1,20 @@
 'use strict';
 
+require('dotenv').config();
+
 const express = require('express');
 const app = express();
 const redis = require('redis');
 const port = process.env.PORT || 3100;
 const shortid = require('shortid');
 const bodyParser = require('body-parser');
-const production = 'https://yerlshrtnr.herokuapp.com';
-const development = 'http://localhost:3100';
 
-const base_url = (process.env.NODE_ENV ? production : development);
+const base_url = process.env.BASE_URL;
 
 // Set up connection to Redis
-const client = redis.createClient();
+const client = redis.createClient(process.env.REDISLABS_SERVER, {
+    password: process.env.REDISLABS_PASSWORD
+});
 
 client.on('error', (err) => {
     console.log('Error: Could not start redis');
