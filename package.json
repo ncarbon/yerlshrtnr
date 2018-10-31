@@ -1,0 +1,17 @@
+{
+  "name": "yerlshrtnr",
+  "version": "1.0.0",
+  "description": "URL shortener",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Nataly Carbonell",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.4",
+    "redis": "^2.8.0",
+    "shortid": "^2.2.13"
+  },
+  "devDependencies": {}
+}
