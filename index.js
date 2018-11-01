@@ -31,6 +31,27 @@ app.use(bodyParser.urlencoded({
 app.use(express.static(__dirname + '/public'));
 
 
+var generateId = (req, res, next) => {
+    if(req.body.customId) {
+        var customId = req.body.customId;
+        // check if customURL is not already used
+        client.exists(customId, (err, reply) => {
+            if(reply === 1) {
+                req.status(400).json({type: 1, message: `Error: key ${customId} could not be generated. Key already taken`})
+            } else {
+                req.body.shortId = customId;
+            }
+            next();
+        });
+    } else {
+        req.body.shortId = shortid.generate();
+        next();
+    }
+}
+
+app.use(generateId);
+
+
 app.get('/', (req, res) => {
     res.sendFile('./public/index.html');
 });
@@ -38,42 +59,36 @@ app.get('/', (req, res) => {
 // post request for creating a short url
 app.post('/api/short_url', (req, res) => {
     var url = req.body.url;
-
-    generateId(req).then((id) => {
-        console.log('promise id: ', id)
-        // add expiration to key if time to live is passed in
-        // client should make sure ttl is sent in seconds
-        if(req.body.ttl) {
-            client.set(id, url, 'EX', req.body.ttl, (err, reply) => {
-                if(err) {
-                    console.log(err);
-                    res.status(400).json({type: 2, message: `Error: Unable to generate short URL. Setting expiration time for key ${id} failed.`});
-                } else {
-                    res.json({
-                        originalURL: url,
-                        shortURL: base_url + '/' + id,
-                        expires: true
-                    });
-                }
-            });
-        } else {
-            client.set(id, url, (err, reply) => {
-                if(err) {
-                    console.log(err);
-                    res.status(400).send('Unable to generate URL');
-                } else {
-                    res.json({
-                        originalURL: url,
-                        shortURL: base_url + '/' + id,
-                        expires: false
-                    });
-                }
-            });
-        }
-    }).catch((err) => {
-        console.log(err);
-        res.status(400).json(err);
-    });
+    // add expiration to key if time to live is passed in
+    // client should make sure ttl is sent in seconds
+    if(req.body.ttl) {
+        client.set(req.body.shortId, url, 'EX', req.body.ttl, (err, reply) => {
+            
+            if(err) {
+                console.log(err);
+                res.status(400).json({type: 2, message: `Error: Unable to generate short URL. Setting expiration time for key ${id} failed.`});
+            } else {
+                res.json({
+                    originalURL: url,
+                    shortURL: base_url + '/' + req.body.shortId,
+                    expires: true
+                });
+            }
+        });
+    } else {
+        client.set(req.body.shortId, url, (err, reply) => {
+            if(err) {
+                console.log(err);
+                res.status(400).send('Unable to generate URL');
+            } else {
+                res.json({
+                    originalURL: url,
+                    shortURL: base_url + '/' + req.body.shortId,
+                    expires: false
+                });
+            }
+        });
+    }
 });
 
 // get request for short URL that redirects to original URL
@@ -90,25 +105,7 @@ app.get('/:id', (req, res) => {
     });
 });
 
+
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
-
-// TODO: this could be a middleware function instead
-var generateId = (req) => {
-    return new Promise((resolve, reject) => {
-        if(req.body.customId) {
-            var customId = req.body.customId;
-            // check that customURL is not already used
-            client.exists(customId, (err, reply) => {
-                if(reply === 1) {
-                    reject({type: 1, message: `Error: Unable to generate short URL. Key ${customId} already in use.`});
-                } else {
-                    resolve(req.body.customId);
-                }
-            });
-        } else {
-            resolve(shortid.generate());
-        }
-    });
-};
