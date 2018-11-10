@@ -5,9 +5,9 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const redis = require('redis');
-const port = process.env.PORT || 3100;
-const shortid = require('shortid');
+const randomId = require('./randomId');
 const bodyParser = require('body-parser');
+const port = process.env.PORT || 3100;
 
 const base_url = process.env.BASE_URL;
 
@@ -27,24 +27,27 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-// Serve static files
 app.use(express.static(__dirname + '/public'));
 
-
+/*
+Middleware handles short URL id creation. 
+Checks if a custom id was provided and assigns it to shortId in the request body.
+If no custom id was provided, a random 7 long character string is generated as the id.
+*/
 var generateId = (req, res, next) => {
     if(req.body.customId) {
         var customId = req.body.customId;
-        // check if customURL is not already used
+        // check if customId already exists in db
         client.exists(customId, (err, reply) => {
             if(reply === 1) {
-                req.status(400).json({type: 1, message: `Error: key ${customId} could not be generated. Key already taken`})
+                res.status(400).json({error: {type: 'DUPLICATE', message: `key ${customId} could not be generated. Key already taken`}});
             } else {
                 req.body.shortId = customId;
             }
             next();
         });
     } else {
-        req.body.shortId = shortid.generate();
+        req.body.shortId = randomId();
         next();
     }
 }
@@ -57,21 +60,24 @@ app.get('/', (req, res) => {
 });
 
 // post request for creating a short url
-app.post('/api/short_url', (req, res) => {
+app.post('/api/shortURL', (req, res) => {
     var url = req.body.url;
     // add expiration to key if time to live is passed in
     // client should make sure ttl is sent in seconds
     if(req.body.ttl) {
         client.set(req.body.shortId, url, 'EX', req.body.ttl, (err, reply) => {
-            
             if(err) {
                 console.log(err);
-                res.status(400).json({type: 2, message: `Error: Unable to generate short URL. Setting expiration time for key ${id} failed.`});
+                res.status(400).json({error: {type: 'CREATION', message: `Unable to generate generate short URL.`}});
             } else {
-                res.json({
-                    originalURL: url,
-                    shortURL: base_url + '/' + req.body.shortId,
-                    expires: true
+                res.status(200).json({
+                    success: {
+                        message: 'Short URL successfully generated.',
+                        originalURL: url,
+                        shortURL: base_url + '/' + req.body.shortId,
+                        expires: true,
+                        ttl: req.body.ttl
+                    }
                 });
             }
         });
@@ -79,12 +85,15 @@ app.post('/api/short_url', (req, res) => {
         client.set(req.body.shortId, url, (err, reply) => {
             if(err) {
                 console.log(err);
-                res.status(400).send('Unable to generate URL');
+                res.status(400).json({error: {type: 'CREATION', message: `Unable to generate generate short URL.`}});
             } else {
-                res.json({
-                    originalURL: url,
-                    shortURL: base_url + '/' + req.body.shortId,
-                    expires: false
+                res.status(200).json({
+                    success: {
+                        message: 'Short URL successfully generated.',
+                        originalURL: url,
+                        shortURL: base_url + '/' + req.body.shortId,
+                        expires: false
+                    }
                 });
             }
         });
@@ -100,7 +109,7 @@ app.get('/:id', (req, res) => {
             res.status(301).send();
            
         } else {
-            res.status(404).json({type: 0, message: `Error: Unable to find key ${id}`});
+            res.status(404).json({error: {type: 'NOT_FOUND', message: `Unable to find id ${id}.`}});
         }
     });
 });
@@ -109,3 +118,5 @@ app.get('/:id', (req, res) => {
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
+
+module.exports = app;

@@ -4,14 +4,21 @@
   "description": "URL shortener",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node ./node_modules/mocha/bin/mocha"
   },
   "author": "Nataly Carbonell",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^6.1.0",
     "express": "^4.16.4",
-    "redis": "^2.8.0",
-    "shortid": "^2.2.13"
+    "redis": "^2.8.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-http": "^4.2.0",
+    "mocha": "^5.2.0",
+    "redis-mock": "^0.37.0",
+    "request": "^2.88.0"
   }
 }
