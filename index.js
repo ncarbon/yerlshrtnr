@@ -11,6 +11,7 @@ const port = process.env.PORT || 3100;
 
 const base_url = process.env.BASE_URL;
 
+
 // Set up connection to Redis
 const client = redis.createClient(process.env.REDISLABS_SERVER, {
     password: process.env.REDISLABS_PASSWORD
@@ -40,8 +41,9 @@ var generateId = (req, res, next) => {
         // check if customId already exists in db
         client.exists(customId, (err, reply) => {
             if(reply === 1) {
-                res.status(400).json({error: {type: 'DUPLICATE', message: `key ${customId} could not be generated. Key already taken`}});
+                return res.status(400).json({error: {type: 'DUPLICATE', message: `key ${customId} could not be generated. Key already taken`}});
             } else {
+                console.log('CUSTOM ID', customId)
                 req.body.shortId = customId;
             }
             next();
@@ -61,39 +63,35 @@ app.get('/', (req, res) => {
 
 // post request for creating a short url
 app.post('/api/shortURL', (req, res) => {
-    var url = req.body.url;
     // add expiration to key if time to live is passed in
     // client should make sure ttl is sent in seconds
     if(req.body.ttl) {
-        client.set(req.body.shortId, url, 'EX', req.body.ttl, (err, reply) => {
+        client.set(req.body.shortId, req.body.url, 'EX', req.body.ttl, (err, reply) => {
             if(err) {
                 console.log(err);
                 res.status(400).json({error: {type: 'CREATION', message: `Unable to generate generate short URL.`}});
             } else {
-                res.status(200).json({
-                    success: {
-                        message: 'Short URL successfully generated.',
-                        originalURL: url,
-                        shortURL: base_url + '/' + req.body.shortId,
-                        expires: true,
-                        ttl: req.body.ttl
-                    }
+                res.status(200).json( {
+                    message: 'Short URL successfully generated.',
+                    originalURL: req.body.url,
+                    shortURL: base_url + '/' + req.body.shortId,
+                    expires: true,
+                    ttl: req.body.ttl
                 });
             }
         });
     } else {
-        client.set(req.body.shortId, url, (err, reply) => {
+        client.set(req.body.shortId, req.body.url, (err, reply) => {
             if(err) {
                 console.log(err);
                 res.status(400).json({error: {type: 'CREATION', message: `Unable to generate generate short URL.`}});
             } else {
                 res.status(200).json({
-                    success: {
-                        message: 'Short URL successfully generated.',
-                        originalURL: url,
-                        shortURL: base_url + '/' + req.body.shortId,
-                        expires: false
-                    }
+                    message: 'Short URL successfully generated.',
+                    originalURL: req.body.url,
+                    shortURL: base_url + '/' + req.body.shortId,
+                    expires: false,
+                    customId: req.body.customId
                 });
             }
         });
