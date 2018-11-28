@@ -4,7 +4,7 @@ Generates short URLs with the option for custom id's and expiration time.
 
 **URL** : `/api/shorturl/`
 
-**Method** : `PUT`
+**Method** : `POST`
 
 
 ## Success Response
@@ -16,7 +16,7 @@ Generates short URLs with the option for custom id's and expiration time.
         {
             "message": "Short URL successfully generated.",
             "originalURL": "https://devcenter.heroku.com/articles/custom-domains#add-a-custom-domain-with-a-subdomain",
-            "shortURL": "yerlshrt.tk/2KLxVZE",
+            "shortURL": "yrlshrt.com/2KLxVZE",
             "expires": true,
             "ttl": 216000
         }

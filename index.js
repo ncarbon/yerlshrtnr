@@ -22,11 +22,11 @@ client.on('error', (err) => {
 });
 
 app.set('base_url', base_url);
+app.set('view engine', 'ejs');
+app.set('views', './views');
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.static(__dirname + '/public'));
 
@@ -58,7 +58,7 @@ app.use(generateId);
 
 
 app.get('/', (req, res) => {
-    res.sendFile('./public/index.html');
+    res.render('index');
 });
 
 // post request for creating a short url
