@@ -42,6 +42,7 @@ var generateId = (req, res, next) => {
         client.exists(customId, (err, reply) => {
             if(reply === 1) {
                 req.body.shortId = randomId();      // still generate a random id if custom one already exists
+                req.body.duplicate = true;
             } else {
                 console.log('CUSTOM ID', customId)
                 req.body.shortId = customId;
