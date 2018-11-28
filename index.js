@@ -42,7 +42,7 @@ var generateId = (req, res, next) => {
         client.exists(customId, (err, reply) => {
             if(reply === 1) {
                 req.body.shortId = randomId();      // still generate a random id if custom one already exists
-                req.body.duplicate = true;
+                res.body.duplicate = true;
             } else {
                 console.log('CUSTOM ID', customId)
                 req.body.shortId = customId;
@@ -77,7 +77,7 @@ app.post('/api/shortURL', (req, res) => {
                     originalURL: req.body.url,
                     shortURL: base_url + '/' + req.body.shortId,
                     expires: true,
-                    ttl: req.body.ttl
+                    ttl: req.body.ttl,
                 });
             }
         });
