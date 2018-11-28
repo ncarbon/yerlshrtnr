@@ -2,7 +2,7 @@
 
 Generates short URLs with the option for custom id's and expiration time.
 
-**URL** : `/api/shorturl/`
+**URL** : `yrlshrt.com/api/shorturl/`
 
 **Method** : `POST`
 
