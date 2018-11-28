@@ -41,7 +41,7 @@ var generateId = (req, res, next) => {
         // check if customId already exists in db
         client.exists(customId, (err, reply) => {
             if(reply === 1) {
-                return res.status(400).json({error: {type: 'DUPLICATE', message: `key ${customId} could not be generated. Key already taken`}});
+                req.body.shortId = randomId();      // still generate a random id if custom one already exists
             } else {
                 console.log('CUSTOM ID', customId)
                 req.body.shortId = customId;
