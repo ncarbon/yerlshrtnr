@@ -14,7 +14,7 @@ describe('index', () => {
     beforeEach((done) => {
         url = 'https://devcenter.heroku.com/articles/custom-domains#add-a-custom-domain-with-a-subdomain';
         ttl = 60;
-        customId = 'mayo';
+        customId = 'fdksdf';
         shortId = randomId();
         done();
     });
